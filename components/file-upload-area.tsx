@@ -2,6 +2,7 @@
 import { FileSpreadsheet } from "lucide-react";
 import { ChangeEvent, useEffect, useRef, useState } from "react";
 import { Table, TableBody, TableCell, TableHeader, TableHead, TableRow } from "@/components/ui/table";
+import { Check, X } from "lucide-react";
 
 const genders = ["Male", "Female", "Other"];
 
@@ -105,7 +106,7 @@ export default function FileUploadArea() {
               <TableCell>{appointment.dateDiff}</TableCell>
               <TableCell>{appointment.diabetes ? "Yes" : "No"}</TableCell>
               <TableCell>{appointment.scholarship ? "Yes" : "No"}</TableCell>
-              <TableCell>{appointment.prediction === null ? "Analyzing..." : (appointment.prediction ? "Yes" : "No")}</TableCell>
+              <TableCell>{appointment.prediction === null ? "Analyzing..." : (appointment.prediction ? <span className="flex items-center gap-1"><Check size="16" />Yes</span> : <span className="flex items-center gap-1"><X size="16" />No</span>)}</TableCell>
             </TableRow>
           )}
         </TableBody>
