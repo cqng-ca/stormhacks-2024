@@ -23,12 +23,21 @@ export default function FileUploadArea() {
   const [appointments, setAppointments] = useState<Appointment[]>([]);
 
   const reader = new FileReader();
-  reader.addEventListener("load", (event) => {
+  reader.addEventListener("load", async (event) => {
     if (typeof event.target?.result !== "string") return
 
     console.log(event.target.result)
-    const appointments = event.target.result.split("\n").slice(1).map((line, i) => {
+    const appointments = await Promise.all(event.target.result.split("\n").slice(1).map(async (line, i) => {
       const [gender, age, scholarship, hypertension, diabetes, alcoholism, handicap, sms, dateDiff, missedAppointmentBefore] = line.split(",");
+      const data: { prediction: number } = await (await fetch("http://localhost:5000/predict", {
+        method: "POST",
+        body: JSON.stringify({ features: (line + "," + "0, ".repeat(81).slice(0, -2)).split(",").map(x => parseInt(x)) }),
+        mode: 'cors',
+        headers: {
+          'Content-type': 'application/json',
+          'Accept': 'application/json',
+        }
+      })).json();
       return {
         id: i,
         gender: parseInt(gender),
@@ -36,27 +45,13 @@ export default function FileUploadArea() {
         dateDiff: parseInt(dateDiff),
         scholarship: scholarship === "1",
         diabetes: diabetes === "1",
-        prediction: null,
+        prediction: !data.prediction,
         raw: line,
       }
-    });
+    }));
     console.log(appointments);
     setAppointments(appointments);
     setLoading(false);
-    appointments.forEach(async (appointment) => {
-      const data: { prediction: number } = await (await fetch("http://localhost:5000/predict", {
-        method: "POST",
-        body: JSON.stringify({ features: (appointment.raw + "," + "0, ".repeat(81).slice(0, -2)).split(",").map(x => parseInt(x)) }),
-        mode: 'cors',
-        headers: {
-          'Content-type': 'application/json',
-          'Accept': 'application/json',
-        }
-      })).json()
-      setAppointments(appointments.map((a) => {
-        return a.id === appointment.id ? { ...a, prediction: !data.prediction } : a;
-      }))
-    });
   })
 
   const dropHandler = (event: DragEvent) => {
